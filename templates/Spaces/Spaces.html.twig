@@ -1,0 +1,257 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Lista de Eventos{% endblock %}
+
+{% block body %}
+    {% include 'navbar.html.twig' %}
+    <div class="content">
+        <div class="card">
+            <h2 class="title">Lista de Espacios</h2>
+
+            <button class="btn-new-event" onclick="openModal('space')">+ Nuevo Espacio</button>
+
+            <table class="event-table">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Estado</th>
+                    <th>Evento</th>
+                    <th>Organizador</th>
+                    <th>Inicio/Fin</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if spaces is defined and spaces %}
+                    {% for space in spaces %}
+                        <tr>
+                            <td>{{ space.name }}</td>
+                            <td class="state {% if space.events is defined and space.events is not empty %}inactive{% else %}active{% endif %}">
+                                {% if space.events is defined and space.events is not empty %}Ocupado{% else %}Libre{% endif %}
+                            </td>
+                            <td>
+                                {% if space.events is defined and space.events is not empty %}
+                                    <ul>
+                                        {% for event in space.events %}
+                                            <li>{{ event.name }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    No hay eventos
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if space.events is defined and space.events is not empty %}
+                                    <ul>
+                                        {% for event in space.events %}
+                                            <li>{{ event.organizer.name }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if space.events is defined and space.events is not empty %}
+                                    <ul>
+                                        {% for event in space.events %}
+                                            <li>{{ event.start|date('Y-m-d H:i') }} / {{ event.end|date('Y-m-d H:i') }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if space.events is defined and space.events is not empty %}
+                                    <ul>
+                                        {% for event in space.events %}
+                                            {% if app.user is not null and event.organizer.id == app.user.id %}
+                                                <li>
+                                                    <a
+                                                        href="#"
+                                                        onclick="openModal(
+                                                            'event_edit',
+                                                            '{{ space.id }}',
+                                                            '{{ space.name }}',
+                                                            '{{ event.name }}',
+                                                            '{{ event.start|date('Y-m-d H:i:s') }}',
+                                                            '{{ event.end|date('Y-m-d H:i:s') }}',
+                                                            '{{ event.id }}')"
+                                                    >
+                                                        Editar
+                                                    </a>
+                                                    <a
+                                                         href="#"
+                                                         onclick="openModal(
+                                                                 'event_detail',
+                                                                 '{{ space.id }}',
+                                                                 '{{ space.name }}',
+                                                                 '{{ event.name }}',
+                                                                 '{{ event.start|date('Y-m-d H:i:s') }}',
+                                                                 '{{ event.end|date('Y-m-d H:i:s') }}',
+                                                                 '{{ event.id }}')"
+                                                    >
+                                                        Detalles
+                                                    </a>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <a href="#" onclick="openModal('event', '{{ space.id }}', '{{ space.name }}')">Reservar</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="no-data">No hay espacios registrados.</td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="eventModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+
+            <div id="form-space">
+                <h2>Crear Nuevo Espacio</h2>
+                <form method="post" action="{{ path('space_create') }}">
+                    <label for="space_name">Nombre del Espacio</label>
+                    <input type="text" id="space_name" name="space_name" required>
+
+                    <button type="submit" class="btn-submit">Guardar Espacio</button>
+                </form>
+            </div>
+
+            <div id="form-event">
+                <h2 id="form_title">Reservar Evento</h2>
+                <form method="post" id="event_form" action="{{ path('event_create') }}">
+                    <label for="event_name">Nombre del Evento</label>
+                    <input type="text" id="event_name" name="event_name" required>
+
+                    <label for="event_space">Espacio</label>
+                    <input type="hidden" id="event_space" name="event_space" readonly required>
+                    <input type="hidden" id="event_id" name="event_id" readonly required>
+                    <input type="text" id="event_space_name" name="event_space_name" readonly required>
+
+                    <label for="start_datetime">Fecha y Hora de Inicio</label>
+                    <input type="datetime-local" id="start_datetime" name="start_datetime" required>
+
+                    <label for="end_datetime">Fecha y Hora de Fin</label>
+                    <input type="datetime-local" id="end_datetime" name="end_datetime" required>
+
+                    <button type="submit" class="btn-submit">Guardar Evento</button>
+                </form>
+            </div>
+
+            <div id="detail-event">
+                <h2>Detalles del Evento</h2>
+                <p><strong>Nombre del Evento:</strong><i id="event_name_detail"></i></p>
+                <p><strong>Espacio:</strong><i id="space_name_detail"></i></p>
+                <p><strong>Fecha y Hora de Inicio:</strong><i id="start_datetime_event"></i></p>
+                <p><strong>Fecha y Hora de Fin:</strong><i id="end_datetime_event"></i></p>
+                <form method="post" action="{{ path('event_cancel') }}" onsubmit="return confirm('¿Estás seguro de eliminar este evento?');">
+                    <input type="hidden" id="event_id_detail" name="event_id_detail" readonly required>
+                    <button type="submit" class="btn-submit">Eliminar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openModal(
+            type,
+            spaceId = null,
+            spaceName = null,
+            eventName = null,
+            start = null,
+            end = null,
+            eventId = null
+        ) {
+            event.preventDefault();
+            document.getElementById("eventModal").style.display = "block";
+            eraseData();
+
+            if (type === 'space') {
+                document.getElementById("form-space").style.display = "block";
+                document.getElementById("form-event").style.display = "none";
+                document.getElementById("detail-event").style.display = "none";
+            } else if (type === 'event') {
+                document.getElementById("form-space").style.display = "none";
+                document.getElementById("detail-event").style.display = "none";
+                document.getElementById("form-event").style.display = "block";
+
+                if (spaceId) {
+                    document.getElementById("event_space").value = spaceId;
+                }
+                if (spaceName) {
+                    document.getElementById("event_space_name").value = spaceName;
+                }
+            } else if (type === 'event_edit') {
+                document.getElementById("form-space").style.display = "none";
+                document.getElementById("form-event").style.display = "block";
+                document.getElementById("detail-event").style.display = "none";
+                document.getElementById("form_title").innerHTML = "Editar Evento";
+                document.getElementById("event_form").action = "/dashboard/event/edit";
+
+                if (spaceId) {
+                    document.getElementById("event_space").value = spaceId;
+                }
+                if (spaceName) {
+                    document.getElementById("event_space_name").value = spaceName;
+                }
+                if (eventName) {
+                    document.getElementById("event_name").value = eventName;
+                }
+                if (start) {
+                    document.getElementById("start_datetime").value = start;
+                }
+                if (end) {
+                    document.getElementById("end_datetime").value = end;
+                }
+                if (eventId) {
+                    document.getElementById("event_id").value = eventId;
+                }
+            } else if (type === 'event_detail') {
+                document.getElementById("form-space").style.display = "none";
+                document.getElementById("form-event").style.display = "none";
+                document.getElementById("detail-event").style.display = "block";
+
+                if (spaceName) {
+                    document.getElementById("space_name_detail").innerHTML = spaceName;
+                }
+                if (eventName) {
+                    document.getElementById("event_name_detail").innerHTML = eventName;
+                }
+                if (start) {
+                    document.getElementById("start_datetime_event").innerHTML = start;
+                }
+                if (end) {
+                    document.getElementById("end_datetime_event").innerHTML = end;
+                }
+                if (eventId) {
+                    document.getElementById("event_id_detail").value = eventId;
+                }
+            }
+        }
+
+        function eraseData() {
+            document.getElementById("event_space").value = '';
+            document.getElementById("event_space_name").value = '';
+            document.getElementById("event_name").value = '';
+            document.getElementById("start_datetime").value = '';
+            document.getElementById("end_datetime").value = '';
+            document.getElementById("event_id").value = '';
+        }
+
+        function closeModal() {
+            document.getElementById("eventModal").style.display = "none";
+        }
+    </script>
+
+{% endblock %}

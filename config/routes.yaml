@@ -1,0 +1,15 @@
+users:
+    resource: ../src/User/Controller/
+    type: attribute
+
+security:
+    resource: ../src/Security/Controller/
+    type: attribute
+
+dashboard:
+    resource: ../src/Events/Controller/
+    type: attribute
+
+spaces:
+    resource: ../src/Spaces/Controller/
+    type: attribute

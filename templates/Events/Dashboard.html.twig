@@ -1,0 +1,44 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Lista de Eventos{% endblock %}
+
+{% block body %}
+    {% include 'navbar.html.twig' %}
+    <div class="content">
+        <div class="card">
+            <h2 class="title">Lista de Eventos</h2>
+
+            <table class="event-table">
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Organizador</th>
+                    <th>Estado</th>
+                    <th>Lugar</th>
+                    <th>Última actualización</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% if events is defined and events %}
+                    {% for event in events %}
+                        <tr>
+                            <td>{{ event.name }}</td>
+                            <td>{{ event.organizer.name }}</td>
+                            <td class="state {% if event.state %}active{% else %}inactive{% endif %}">
+                                {% if event.state %}Activo{% else %}Inactivo{% endif %}
+                            </td>
+                            <td>{{ event.space.name }}</td>
+                            <td>{{ event.updatedAt|date('Y-m-d H:i') }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="no-data">No hay eventos registrados.</td>
+                    </tr>
+                {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+{% endblock %}
