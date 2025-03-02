@@ -37,12 +37,11 @@ logs: ## Show Symfony logs in real time
 composer-install: ## Installs composer dependencies
 	U_ID=${UID} docker exec --user ${UID} ${DOCKER_BE} composer install --no-interaction
 
-
 ssh-be: ## bash into the be container
 	U_ID=${UID} docker exec -it --user ${UID} ${DOCKER_BE} bash
 
 code-style: ## Runs php-cs to fix code styling following Symfony rules
 	U_ID=${UID} docker exec --user ${UID} ${DOCKER_BE} php-cs-fixer fix src --rules=@Symfony
 
-test: ## Ejecuta phpstan dentro del contenedor
+test: ## Ejecuta test dentro del contenedor
 	U_ID=${UID} docker exec --user ${UID} ${DOCKER_BE} vendor/bin/phpunit

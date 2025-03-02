@@ -16,7 +16,6 @@
 ###< phpunit/phpunit ###
 
 .env
-.env.test
 
 .idea/
 
