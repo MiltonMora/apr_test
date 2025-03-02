@@ -30,7 +30,7 @@
    
 5. Ingrese al contenedor de Symfony 
    ```bash
-    make run
+    make ssh-be
     ```
    Y ejecute la Migracion inicial, esto crear las tablas y los usuarios para poder interactuar.
    ```bash
